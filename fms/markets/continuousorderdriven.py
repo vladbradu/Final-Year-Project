@@ -7,6 +7,7 @@ Any order is considered valid.
 
 from fms import markets
 from fms.utils import BUY, SELL
+from fms.utils import priceQuantityTracker
 
 class ContinuousOrderDriven(markets.Market):
     """
@@ -271,6 +272,25 @@ class ContinuousOrderDriven(markets.Market):
         """
         Clears books, executing all possible transactions
         """
+        #check if the sellbook and buybook are maintained correctly
+        #update the best offer lists
+        if len(self.buybook)>0:
+            priceQuantityTracker.updateBuyOffers(self.buybook[-1])
+            print "buybook is: ", self.buybook[-1][0]
+        else:
+            priceQuantityTracker.updateBuyOffers([[-1][-1]])
+        if len(self.sellbook)>0:
+            priceQuantityTracker.updateSellOffers(self.sellbook[0])
+            print "sellbook is: ", self.sellbook[0][0]
+        else:
+            priceQuantityTracker.updateSellOffers([[-1][-1]])
+
+        if len(priceQuantityTracker.bestBuyOffers)>0:
+                    print "Best Buy Offer is: ", priceQuantityTracker.bestBuyOffers[-1][0]
+        if len(priceQuantityTracker.bestSellOffers)>0:
+                    print "Best Sell Offer is: ", priceQuantityTracker.bestSellOffers[-1][0]
+
+        #execute valid transactions
         if len(self.buybook) and len(self.sellbook):
             while len(self.sellbook) and len(self.buybook) \
                     and self.sellbook[0][0] <= self.buybook[-1][0]:
@@ -287,6 +307,8 @@ class ContinuousOrderDriven(markets.Market):
                     buyer.record(BUY, executedprice, qty)
                     seller.record(SELL, executedprice, qty)
                 self.output_transaction(time, executedprice, qty)
+
+
                 if qty == self.buybook[-1][2]:
                     del self.buybook[-1]
                 else:
@@ -295,6 +317,19 @@ class ContinuousOrderDriven(markets.Market):
                     del self.sellbook[0]
                 else:
                     self.sellbook[0][2] -= qty
+
+                #update the prices and quantities whenever a transaction occurs
+                if len(priceQuantityTracker.priceList)>0:
+                    print "Last price: ", priceQuantityTracker.priceList[-1]
+                print "TRANSACTION HAPPENED"
+
+                if len(priceQuantityTracker.movingAverage) > 0:
+                    print "Moving Average: ", priceQuantityTracker.movingAverage[0]
+                priceQuantityTracker.updatePrice(executedprice)
+                priceQuantityTracker.updateQuantity(qty)
+                priceQuantityTracker.updateMovingAverage()
+
+
 
 
 def _test():

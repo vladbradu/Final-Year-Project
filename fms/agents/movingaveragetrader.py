@@ -1,23 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf8 -*-
 """
-Module defining SomeIntelligenceTrader agent class.
+Module defining MovingAverageTrader agent class.
 """
 
 import random
 
-
 from fms import agents
 from fms.utils import BUY, SELL
 from fms.utils.exceptions import MissingParameter
-from fms.utils.priceQuantityTracker import priceList, bestBuyOffers, bestSellOffers, previousBestSellOffers, previousBestBuyOffers
+import fms.utils.priceQuantityTracker
+from fms.utils.priceQuantityTracker import priceList, movingAverage
 
 
-
-
-
-
-class SomeIntelligenceTrader(agents.Agent):
+class MovingAverageTrader(agents.Agent):
     """
     Simulate an agent taking some decisions
 
@@ -27,19 +23,19 @@ class SomeIntelligenceTrader(agents.Agent):
     - maxbuy : maximum quantity to buy (int)
     If any of those parameters is missing, a MissingParameter
     exception is raised.
-    >>> from fms.agents import someintelligencetrader
+    >>> from fms.agents import movingaveragetrader
     >>> params = {'agents': [{'money':10000, 'stocks':200}]}
-    >>> agent = someintelligencetrader.SomeIntelligenceTrader(params)
+    >>> agent = movingaveragetrader.MovingAverageTrader(params)
     Traceback (most recent call last):
         ...
     MissingParameter: maxprice
     >>> params = {'agents': [{'money':10000, 'stocks':200, 'args':[999]}]}
-    >>> agent = someintelligencetrader.SomeIntelligenceTrader(params)
+    >>> agent = movingaveragetrader.MovingAverageTrader(params)
     Traceback (most recent call last):
         ...
     MissingParameter: maxbuy
     >>> params = {'agents': [{'money':10000, 'stocks':200, 'args':[999, 100]}]}
-    >>> agent = someintelligencetrader.SomeIntelligenceTrader(params)
+    >>> agent = movingaveragetrader.MovingAverageTrader(params)
     >>> print agent.state()
     Agent ... - owns $10000.00 and    200 securities
     >>> print agent.maxprice
@@ -61,7 +57,7 @@ class SomeIntelligenceTrader(agents.Agent):
       - if direction==SELL, [1,self.stocks]
     Thus, shortselling is not allowed.
     """
-    
+
     def __init__(self, params, offset=0):
         agents.Agent.__init__(self, params, offset)
         try:
@@ -80,50 +76,19 @@ class SomeIntelligenceTrader(agents.Agent):
         To avoid short selling as far as possible, if # of stocks
         is zero or negative, force BUY direction.
         """
-       #if 0 < self.stocks <= 2000:
-            #direction = random.choice((BUY, SELL))
-       # elif self.stocks > 2000:
-            #direction = SELL
-        if self.stocks > 0:
-            direction = random.choice((BUY, SELL))
-        else:
-            # stocks<=0, short selling is forbidden
+
+
+        if movingAverage > priceList[-1] and self.money > 0:
             direction = BUY
+        elif movingAverage < priceList[-1] and self.stocks > 0:
+            direction = SELL
+        else: direction = BUY
 
-        # if this is the first bid, initialise market with 100
-
-        if direction == SELL:
-            if len(bestBuyOffers) == 0:
-                price = 100.00
-
+        if self.maxprice > priceList[-1]:
+            if direction == SELL:
+                price = random.randint(priceList[-1] - priceList[-1] * 2 / 100, priceList[-1] * 5 / 100 + priceList[-1])
             else:
-                if bestBuyOffers[-1][0] != -1:
-                    price = float("{0:.2f}".format(random.uniform(bestBuyOffers[-1][0] - bestBuyOffers[-1][0] * 5 / 1000, bestBuyOffers[-1][0])))
-
-                else:
-                    if bestSellOffers != -1:
-                        price = float("{0:.2f}".format(random.uniform(bestSellOffers[-1][0] - bestSellOffers[-1][0] * 5 / 1000, bestSellOffers[-1][0])))
-
-                    else:
-                        price = float("{0:.2f}".format(random.uniform(priceList[-1], priceList[-1] * 5 / 1000 + priceList[-1])))
-
-
-        if direction == BUY:
-            if len(bestSellOffers) == 0:
-                price = 100.00
-
-            else:
-                if bestSellOffers[-1][0] != -1:
-                    price = float("{0:.2f}".format(random.uniform(bestSellOffers[-1][0], bestSellOffers[-1][0] + bestSellOffers[-1][0] * 5 / 1000)))
-
-                else:
-                    if bestBuyOffers != -1:
-                        price = float("{0:.2f}".format(random.uniform(bestBuyOffers[-1][0], bestBuyOffers[-1][0] * 5 / 1000 + bestBuyOffers[-1][0])))
-                    else:
-                        price = float("{0:.2f}".format(random.uniform(priceList[-1] - priceList[-1] * 5 / 1000, priceList[-1])))
-
-
-
+                price = random.randint(priceList[-1] - priceList[-1] * 5 / 100, priceList[-1] * 2 / 100 + priceList[-1])
 
 
         if direction:
@@ -131,7 +96,6 @@ class SomeIntelligenceTrader(agents.Agent):
         else:
             quantity = random.randint(1, self.maxbuy)
         return {'direction':direction, 'price':price, 'quantity':quantity}
-
 
 def _test():
     """
