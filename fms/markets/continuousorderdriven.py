@@ -9,6 +9,10 @@ from fms import markets
 from fms.utils import BUY, SELL
 from fms.utils import priceQuantityTracker
 
+bestBids = []
+bestOffers = []
+averagePrice = []
+
 class ContinuousOrderDriven(markets.Market):
     """
     Simulate an order driven market with continuous transactions.
@@ -227,6 +231,8 @@ class ContinuousOrderDriven(markets.Market):
 
     """
 
+
+
     def __init__(self, parameters=None):
         """
         Class constructor.
@@ -243,6 +249,8 @@ class ContinuousOrderDriven(markets.Market):
         """
         Checks if order is valid. Always True for this market.
         """
+
+
         return True
 
     def info(self):
@@ -272,34 +280,29 @@ class ContinuousOrderDriven(markets.Market):
         """
         Clears books, executing all possible transactions
         """
-        #check if the sellbook and buybook are maintained correctly
-        #update the best offer lists
-        if len(self.buybook)>0:
-            priceQuantityTracker.updateBuyOffers(self.buybook[-1])
-            print "buybook is: ", self.buybook[-1][0]
-        else:
-            priceQuantityTracker.updateBuyOffers([[-1][-1]])
-        if len(self.sellbook)>0:
-            priceQuantityTracker.updateSellOffers(self.sellbook[0])
-            print "sellbook is: ", self.sellbook[0][0]
-        else:
-            priceQuantityTracker.updateSellOffers([[-1][-1]])
 
-        if len(priceQuantityTracker.bestBuyOffers)>0:
-                    print "Best Buy Offer is: ", priceQuantityTracker.bestBuyOffers[-1][0]
-        if len(priceQuantityTracker.bestSellOffers)>0:
-                    print "Best Sell Offer is: ", priceQuantityTracker.bestSellOffers[-1][0]
+
+
+
+
 
         #execute valid transactions
         if len(self.buybook) and len(self.sellbook):
             while len(self.sellbook) and len(self.buybook) \
                     and self.sellbook[0][0] <= self.buybook[-1][0]:
                 qty = min(self.buybook[-1][2], self.sellbook[0][2])
+
+
                 if -self.buybook[-1][1] > self.sellbook[0][1]:
                     executedprice = self.sellbook[0][0]
                 else:
                     executedprice = self.buybook[-1][0]
+
+                #print "Executed price is: ", executedprice
                 self.lastprice = executedprice
+                priceQuantityTracker.updatePrice(executedprice)
+                priceQuantityTracker.updateQuantity(qty)
+                priceQuantityTracker.updateMovingAverage()
                 self.transaction += 1
                 buyer = self.buybook[-1][3]
                 seller = self.sellbook[0][3]
@@ -323,11 +326,9 @@ class ContinuousOrderDriven(markets.Market):
                     print "Last price: ", priceQuantityTracker.priceList[-1]
                 print "TRANSACTION HAPPENED"
 
-                if len(priceQuantityTracker.movingAverage) > 0:
-                    print "Moving Average: ", priceQuantityTracker.movingAverage[0]
-                priceQuantityTracker.updatePrice(executedprice)
-                priceQuantityTracker.updateQuantity(qty)
-                priceQuantityTracker.updateMovingAverage()
+                #if len(priceQuantityTracker.movingAverage) > 0:
+                    #print "Moving Average: ", priceQuantityTracker.movingAverage[0]
+
 
 
 

@@ -81,16 +81,15 @@ class BigInvestmentTrader(agents.Agent):
             price = 100.00
         else:
             if bestSellOffers[-1][0] != -1:
-                price = float("{0:.2f}".format(random.uniform(bestSellOffers[-1][0] * 1 / 100 + bestSellOffers[-1][0], bestSellOffers[-1][0] * 2 / 100 + bestSellOffers[-1][0])))
+                price = float("{0:.2f}".format(random.uniform(100.10, 100.20)* bestSellOffers[-1]/ 100.0))
             else:
                 if bestBuyOffers != -1:
-                    price = float("{0:.2f}".format(random.uniform(bestBuyOffers[-1][0] + bestBuyOffers[-1][0] * 1 / 100, bestBuyOffers[-1][0] + bestBuyOffers[-1][0] * 2 / 100)))
+                    price = float("{0:.2f}".format(random.uniform(100.10, 100.20)* bestBuyOffers[-1]/ 100.0))
                 else:
-                    price = float("{0:.2f}".format(random.uniform(priceList[-1] + priceList[-1] * 1 / 100, priceList[-1] * 2 / 100 + priceList[-1])))
+                    price = float("{0:.2f}".format(random.uniform(100.10, 100.20)* priceList[-1]/ 100.0))
 
 
-
-        quantity = 25
+        quantity = self.maxbuy * 3
 
         return {'direction':direction, 'price':price, 'quantity':quantity}
 

@@ -77,19 +77,29 @@ class MovingAverageTrader(agents.Agent):
         is zero or negative, force BUY direction.
         """
 
+        if len(priceList) > 0:
 
-        if movingAverage > priceList[-1] and self.money > 0:
-            direction = BUY
-        elif movingAverage < priceList[-1] and self.stocks > 0:
-            direction = SELL
-        else: direction = BUY
-
-        if self.maxprice > priceList[-1]:
-            if direction == SELL:
-                price = random.randint(priceList[-1] - priceList[-1] * 2 / 100, priceList[-1] * 5 / 100 + priceList[-1])
+            if movingAverage[0] > priceList[-1]:
+                direction = BUY
+            elif movingAverage[0] < priceList[-1] and self.stocks > 0:
+                direction = SELL
+            else: direction = BUY
+        else:
+            choice = random.randint(0, 1)
+            if choice==0:
+                direction = BUY
             else:
-                price = random.randint(priceList[-1] - priceList[-1] * 5 / 100, priceList[-1] * 2 / 100 + priceList[-1])
+                direction = SELL
 
+        #if self.maxprice > priceList[-1]:
+
+        if len(priceList) > 0:
+            if direction == SELL:
+                price = float("{0:.2f}".format(random.uniform(99.96, 100.00) * priceList[-1] / 100))
+            else:
+                price = float("{0:.2f}".format(random.uniform(100.00, 100.04) * priceList[-1] / 100))
+        else:
+            price = 100.0
 
         if direction:
             quantity = random.randint(1, self.stocks)
